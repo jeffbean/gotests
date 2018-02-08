@@ -24,6 +24,7 @@ type Options struct {
 	PrintInputs bool                  // Print function parameters in error messages
 	Subtests    bool                  // Print tests using Go 1.7 subtests
 	Importer    func() types.Importer // A custom importer.
+	TemplateDir string                // Provided custom template files
 }
 
 // A GeneratedTest contains information about a test file with generated tests.

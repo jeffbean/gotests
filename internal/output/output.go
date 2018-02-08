@@ -26,14 +26,18 @@ func Process(head *models.Header, funcs []*models.Function, opt *Options) ([]byt
 	}
 	defer tf.Close()
 	defer os.Remove(tf.Name())
+
 	b := &bytes.Buffer{}
 	if err := writeTests(b, head, funcs, opt); err != nil {
 		return nil, err
 	}
+
 	out, err := imports.Process(tf.Name(), b.Bytes(), nil)
 	if err != nil {
+		fmt.Println(out)
 		return nil, fmt.Errorf("imports.Process: %v", err)
 	}
+
 	return out, nil
 }
 

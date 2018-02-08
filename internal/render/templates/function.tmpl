@@ -21,7 +21,7 @@ func {{.TestName}}(t *testing.T) {
 	}
 	{{- end}}
 	tests := []struct {
-		name string
+		msg string
 		{{- with .Receiver}}
 			{{- if and .IsStruct .Fields}}
 				fields fields
@@ -36,13 +36,13 @@ func {{.TestName}}(t *testing.T) {
 			{{Want .}} {{.Type}}
 		{{- end}}
 		{{- if .ReturnsError}}
-			wantErr bool
+			wantErr string
 		{{- end}}
 	}{
 		// TODO: Add test cases.
 	}
 	for {{if not .IsNaked}} _, tt := {{end}} range tests {
-        {{- if .Subtests }}t.Run(tt.name, func(t *testing.T) { {{- end -}}
+        t.Run(tt.msg, func(t *testing.T) {
 			{{- with .Receiver}}
 				{{- if .IsStruct}}
 					{{Receiver .}} := {{if .Type.IsStar}}&{{end}}{{.Type.Value}}{
@@ -61,25 +61,24 @@ func {{.TestName}}(t *testing.T) {
 				{{template "results" $f}} {{template "call" $f}}
 			{{- end}}
 			{{- if .ReturnsError}}
-				if {{if .OnlyReturnsError}} err := {{template "call" $f}}; {{end}} (err != nil) != tt.wantErr {
-					t.Errorf("{{template "message" $f}} error = %v, wantErr %v", {{template "inputs" $f}} err, tt.wantErr)
+				{{if .OnlyReturnsError}}err := {{template "call" $f}} {{end}}
+				if tt.wantErr != "" {
+					assert.EqualError(t, err, tt.wantErr)
 					{{- if .TestResults}}
 						{{if .Subtests }}return{{else}}continue{{end}}
 					{{- end}}
 				}
+
 			{{- end}}
 			{{- range .TestResults}}
 				{{- if .IsWriter}}
-					if {{Got .}} := {{Param .}}.String(); {{Got .}} != tt.{{Want .}} {
-				{{- else if .IsBasicType}}
-					if {{if $f.OnlyReturnsOneValue}}{{Got .}} := {{template "inline" $f}}; {{end}} {{Got .}} != tt.{{Want .}} {
+					{{Got .}} := {{Param .}}.String()
 				{{- else}}
-					if {{if $f.OnlyReturnsOneValue}}{{Got .}} := {{template "inline" $f}}; {{end}} !reflect.DeepEqual({{Got .}}, tt.{{Want .}}) {
+					{{if $f.OnlyReturnsOneValue}}{{Got .}} := {{template "inline" $f}} {{end}}
 				{{- end}}
-				t.Errorf("{{template "message" $f}} {{if $f.ReturnsMultiple}}{{Got .}} {{end}}= %v, want %v", {{template "inputs" $f}} {{Got .}}, tt.{{Want .}})
-				}
+					assert.Equal(t, tt.{{Want .}}, {{Got .}})
 			{{- end}}
-		{{- if .Subtests }} }) {{- end -}}
+		})
 	}
 }
 
