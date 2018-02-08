@@ -144,7 +144,11 @@ func parseTestFile(p *goparser.Parser, testPath string, h *models.Header) (*mode
 	for _, fun := range tr.Funcs {
 		testFuncs = append(testFuncs, fun.Name)
 	}
+
 	tr.Header.Imports = append(tr.Header.Imports, h.Imports...)
+	tr.Header.Imports = append(tr.Header.Imports, &models.Import{
+		Path: "\"github.com/stretchr/testify/assert\"",
+	})
 	h = tr.Header
 	return h, testFuncs, nil
 }
